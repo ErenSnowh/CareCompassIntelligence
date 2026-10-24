@@ -103,15 +103,55 @@ function filterCaregiverTable() {
   renderCaregiversTable(filtered);
 }
 
-// Voice Simulation
-function toggleVoiceSim() {
+// Voice Input (Web Speech API) with graceful fallback
+let voiceRecognition = null;
+let isListening = false;
+function toggleVoiceInput() {
   const inputEl = document.getElementById('user-input-field');
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    // Fallback simulation for unsupported browsers
+    inputEl.placeholder = 'Voice not supported — using demo input...';
+    setTimeout(() => {
+      inputEl.value = 'papa ko do din se bukhar hai aur khansi bhi';
+      inputEl.placeholder = 'Type in English, Hindi, or Hinglish...';
+    }, 1200);
+    return;
+  }
+  if (isListening && voiceRecognition) {
+    voiceRecognition.stop();
+    return;
+  }
+  voiceRecognition = new SpeechRecognition();
+  voiceRecognition.lang = 'hi-IN'; // Hindi/Hinglish; browser may also accept en-IN
+  voiceRecognition.interimResults = true;
+  voiceRecognition.continuous = false;
+  isListening = true;
   inputEl.placeholder = 'Listening (Hindi / English / Hinglish)...';
-  setTimeout(() => {
-    inputEl.value = 'papa ko do din se bukhar hai aur khansi bhi';
+  voiceRecognition.onresult = (event) => {
+    let transcript = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
+    }
+    inputEl.value = transcript;
+  };
+  voiceRecognition.onerror = () => {
+    inputEl.placeholder = 'Voice error — please type your request.';
+    isListening = false;
+  };
+  voiceRecognition.onend = () => {
+    isListening = false;
     inputEl.placeholder = 'Type in English, Hindi, or Hinglish...';
-  }, 1200);
+  };
+  try {
+    voiceRecognition.start();
+  } catch (e) {
+    isListening = false;
+    inputEl.placeholder = 'Voice start failed — please type.';
+  }
 }
+// Backwards-compatible alias
+function toggleVoiceSim() { toggleVoiceInput(); }
 
 // Append Message to Chat Window
 function appendChatMessage(role, text) {

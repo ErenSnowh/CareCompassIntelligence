@@ -990,3 +990,11 @@ select#role-filter {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+
+/* Accessibility & voice-first enhancements */
+button, .action-icon-btn, .send-btn { min-height: 44px; min-width: 44px; }
+textarea, input { font-size: 16px; }
+:focus-visible { outline: 3px solid #00d4aa; outline-offset: 2px; }
+.high-contrast { filter: contrast(1.2); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
