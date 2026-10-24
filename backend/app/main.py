@@ -378,7 +378,49 @@ async def submit_feedback(feedback: FeedbackRequest):
     }
 
 
+@app.get("/api/v1/caregivers/{caregiver_id}/verify", tags=["Caregiver Roster"])
+async def verify_caregiver(caregiver_id: str):
+    """
+    Verify caregiver credentials in real time using TinyFish Agent API.
+    Checks licensing status against official medical and nursing councils.
+    """
+    loader: DataLoader = app_state.get("data_loader")
+    tinyfish: TinyFishService = app_state.get("tinyfish_service")
+
+    if not loader:
+        raise HTTPException(status_code=503, detail="Data loader not initialized")
+
+    cg = loader.get_caregiver(caregiver_id)
+    if not cg:
+        raise HTTPException(status_code=404, detail=f"Caregiver {caregiver_id} not found")
+
+    reg_number = f"MED-{cg.caregiver_id}-2026"
+    verification = await tinyfish.verify_caregiver_credentials(
+        caregiver_id=caregiver_id,
+        registration_number=reg_number,
+    )
+    return {
+        "caregiver": cg.model_dump(),
+        "verification": verification,
+    }
+
+
+@app.get("/api/v1/medical-grounding", tags=["Health & Observability"])
+async def get_medical_grounding(query: str):
+    """Query TinyFish Search / Clinical Knowledge Base for verified medical guidance."""
+    tinyfish: TinyFishService = app_state.get("tinyfish_service")
+    if not tinyfish:
+        raise HTTPException(status_code=503, detail="TinyFish service not initialized")
+
+    guidelines = await tinyfish.search_medical_context(query)
+    return {
+        "query": query,
+        "guidelines": guidelines,
+    }
+
+
 @app.get("/api/v1/analytics/summary", tags=["Health & Observability"])
+
 async def analytics_summary():
     """Retrieve real-time operational analytics and triage distribution summary."""
     loader: DataLoader = app_state.get("data_loader")
@@ -391,3 +433,5 @@ async def analytics_summary():
         "dataset_baseline": dataset_stats,
         "runtime_metrics": audit_stats,
     }
+
+
