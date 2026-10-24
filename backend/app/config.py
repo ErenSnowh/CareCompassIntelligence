@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     # --- Database ---
     database_url: Optional[str] = None  # e.g. postgresql+psycopg://user:pass@localhost:5432/carecompass
 
+    # --- Supabase ---
+    supabase_url: Optional[str] = None
+    supabase_anon_key: Optional[str] = None
+    supabase_service_role_key: Optional[str] = None  # server-side only; never expose to client
     # --- Redis ---
     redis_url: Optional[str] = None
 

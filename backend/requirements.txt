@@ -27,6 +27,8 @@ passlib[bcrypt]==1.7.4
 bleach==6.1.0
 python-multipart==0.0.12
 
+# Database
+supabase==2.33.0
 # Caching
 redis==5.1.1
 

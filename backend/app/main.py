@@ -31,6 +31,7 @@ from app.services.language_processor import LanguageProcessor
 from app.services.reasoning_engine import ReasoningEngine
 from app.services.red_flag_detector import RedFlagDetector
 from app.services.tinyfish_service import TinyFishService
+from app.services.supabase_service import SupabaseService
 from app.services.triage_classifier import TriageClassifier
 
 # Logging setup
@@ -66,6 +67,11 @@ async def lifespan(app: FastAPI):
     caregiver_matcher = CaregiverMatcher()
     reasoning_engine = ReasoningEngine()
     tinyfish_service = TinyFishService(api_key=settings.tinyfish_api_key)
+    supabase_service = SupabaseService(
+        url=settings.supabase_url,
+        anon_key=settings.supabase_anon_key,
+        service_role_key=settings.supabase_service_role_key,
+    )
     security_middleware = SecurityMiddleware()
     audit_logger = AuditLogger()
 
@@ -77,6 +83,7 @@ async def lifespan(app: FastAPI):
     app_state["caregiver_matcher"] = caregiver_matcher
     app_state["reasoning_engine"] = reasoning_engine
     app_state["tinyfish_service"] = tinyfish_service
+    app_state["supabase_service"] = supabase_service
     app_state["security_middleware"] = security_middleware
     app_state["audit_logger"] = audit_logger
 
@@ -156,6 +163,7 @@ async def health_check():
             "triage_classifier": "active",
             "caregiver_matcher": "active",
             "tinyfish_service": "configured" if settings.tinyfish_api_key else "fallback_mode",
+            "supabase": "configured" if settings.supabase_url and (settings.supabase_service_role_key or settings.supabase_anon_key) else "fallback_mode",
         },
     }
 
