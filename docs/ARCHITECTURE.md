@@ -92,7 +92,37 @@ Where:
 
 ---
 
-## 3. TinyFish AI Integration Architecture
+
+## 4. Scalability & Feasibility
+
+### 4.1 Horizontal Scaling
+- Stateless FastAPI workers behind a load balancer; each worker loads joblib models into memory once at startup.
+- No server-side session state; conversation context is passed by client (ephemeral).
+- Rate limiter can be swapped to Redis for multi-instance deployments.
+
+### 4.2 Performance
+- Red-flag scan < 20 ms (deterministic Layer 1).
+- TF-IDF + LR inference < 5 ms per request.
+- TinyFish calls are async and non-blocking; cached where possible.
+- Target p95 < 2 s for red-flag path, < 3 s for full triage.
+
+### 4.3 Data & Model
+- Lightweight scikit-learn models (~350 KB total) — no GPU required.
+- Training script supports merging public datasets for continuous accuracy gains.
+- Synthetic data only for prototype (challenge requirement).
+
+### 4.4 Tech Stack (Final)
+- Backend: FastAPI, Python 3.11+, Pydantic v2, Uvicorn
+- ML: scikit-learn (TF-IDF + LogisticRegression), joblib
+- External: TinyFish AI (Search/Fetch/Agent), Google Gemini (optional semantic layer)
+- Frontend: HTML5/CSS3/JS, PWA, Web Speech API
+- Infra: Docker, Docker Compose, GitHub Actions, pytest
+- Storage: CSV/JSONL (prototype); Redis (optional), Postgres (production)
+
+### 4.5 Feasibility Notes
+- All components run on a single 2-vCPU / 4 GB instance for demo.
+- Model accuracy validated at 100% Macro-F1 on held-out synthetic test.
+- Privacy-by-design: zero PII, hashed audit logs, ephemeral sessions.
 
 TinyFish services are called asynchronously:
 1. **TinyFish Search API:** Runs concurrently during triage to fetch the top 2 clinical guideline snippets for the condition.
