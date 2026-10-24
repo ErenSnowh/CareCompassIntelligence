@@ -14,6 +14,7 @@ import logging
 from pathlib import Path
 from typing import Any, Optional
 
+import joblib
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -42,6 +43,20 @@ class TriageClassifier:
         self.care_model: Optional[Pipeline] = None
         self.urgency_model: Optional[Pipeline] = None
         self._trained = False
+
+        # Prefer pre-trained artifacts if available (higher accuracy, faster startup)
+        model_dir = Path(__file__).resolve().parents[2] / "models"
+        care_path = model_dir / "care_model.joblib"
+        urg_path = model_dir / "urgency_model.joblib"
+        if care_path.exists() and urg_path.exists():
+            try:
+                self.care_model = joblib.load(care_path)
+                self.urgency_model = joblib.load(urg_path)
+                self._trained = True
+                logger.info("Loaded pre-trained triage models from %s", model_dir)
+                return
+            except Exception as exc:
+                logger.warning("Failed to load pre-trained models: %s", exc)
 
         self._train_pipeline()
 
