@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     jwt_expiry_minutes: int = 15
     rate_limit_per_minute: int = 100
 
+    # --- Database ---
+    database_url: Optional[str] = None  # e.g. postgresql+psycopg://user:pass@localhost:5432/carecompass
+
     # --- Redis ---
     redis_url: Optional[str] = None
 
