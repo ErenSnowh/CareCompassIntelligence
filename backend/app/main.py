@@ -125,8 +125,8 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # --- API Routes ---
 
-@app.get("/", tags=["General"])
-async def root():
+@app.get("/api", tags=["General"])
+async def root_api():
     """System entry point and service status."""
     return {
         "app": settings.app_name,
@@ -135,6 +135,7 @@ async def root():
         "tagline": "From Symptoms to Safety — In Seconds, Not Hours.",
         "docs": "/docs",
     }
+
 
 
 @app.get("/api/v1/health", tags=["Health & Observability"])
@@ -433,5 +434,16 @@ async def analytics_summary():
         "dataset_baseline": dataset_stats,
         "runtime_metrics": audit_stats,
     }
+
+
+# Mount Frontend Web Application
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+
+frontend_dir = (Path(__file__).parent.parent.parent / "frontend").resolve()
+if frontend_dir.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
+    logger.info("Mounted frontend web app from %s", frontend_dir)
+
 
 

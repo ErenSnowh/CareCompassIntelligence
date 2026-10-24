@@ -18,11 +18,19 @@ def client():
 
 
 def test_root_endpoint(client):
+    # Front page serves interactive HTML UI
     response = client.get("/")
     assert response.status_code == 200
-    data = response.json()
+    assert "text/html" in response.headers.get("content-type", "")
+    assert "CareCompass AI" in response.text
+
+    # /api serves system status JSON
+    api_resp = client.get("/api")
+    assert api_resp.status_code == 200
+    data = api_resp.json()
     assert data["status"] == "online"
     assert "CareCompass" in data["app"]
+
 
 
 def test_health_endpoint(client):

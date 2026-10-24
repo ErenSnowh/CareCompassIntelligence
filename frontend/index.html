@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CareCompass AI — Autonomous Clinical Care-Triage & Caregiver Routing</title>
+  <meta name="description" content="AI-powered medical triage and caregiver matching system for Indian healthcare. Handles Hindi, English, Hinglish with safety-first red flag detection.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+  <!-- Top Global Announcement Banner -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">CareCompass <span class="ai-badge">AI</span></span>
+          <span class="brand-sub">Clinical Decision Support System</span>
+        </div>
+      </div>
+
+      <div class="nav-metrics">
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <span id="system-status-text">Core Active · 52 Caregivers Live</span>
+        </div>
+        <div class="tinyfish-pill">
+          <span class="fish-icon">🐟</span>
+          <span>TinyFish Grounded</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <button id="tab-patient-btn" class="nav-btn active" onclick="switchTab('patient')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          Patient Triage
+        </button>
+        <button id="tab-dashboard-btn" class="nav-btn" onclick="switchTab('dashboard')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          Ops Dashboard
+        </button>
+        <a href="/docs" target="_blank" class="docs-btn" title="API OpenAPI Documentation">
+          <span>API Docs</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Emergency 112 Persistent Alert Banner -->
+  <aside class="emergency-banner" id="global-emergency-alert" style="display: none;">
+    <div class="emergency-content">
+      <span class="alert-icon">🚨</span>
+      <div class="emergency-text">
+        <strong>MEDICAL EMERGENCY DETECTED:</strong>
+        <span id="emergency-alert-msg">Immediate emergency services (112) routing required. Do not wait for home care.</span>
+      </div>
+      <a href="tel:112" class="call-112-btn">Call 112 Now</a>
+    </div>
+  </aside>
+
+  <!-- Main View Container -->
+  <main class="main-wrapper">
+    <!-- VIEW 1: PATIENT TRIAGE STUDIO -->
+    <section id="patient-view" class="view-panel active">
+      <div class="layout-grid">
+        <!-- Chat & Input Column -->
+        <div class="chat-column">
+          <div class="panel-card chat-card">
+            <div class="panel-header">
+              <div class="header-info">
+                <h2>Clinical Care Triage</h2>
+                <p>Describe your health concern in <strong>Hindi, English, or Hinglish</strong></p>
+              </div>
+              <div class="location-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <span id="current-location-text">Delhi NCR (28.54, 77.27)</span>
+              </div>
+            </div>
+
+            <!-- Quick Scenario Pills -->
+            <div class="scenario-section">
+              <span class="scenario-label">Quick Clinical Demos:</span>
+              <div class="scenario-pills">
+                <button class="pill emergency" onclick="loadSample('papa ko severe chest pain ho raha hai aur breathing problem hai')">
+                  🚨 Cardiac Emergency (Hinglish)
+                </button>
+                <button class="pill" onclick="loadSample('papa ko do din se bukhar hai aur khansi bhi')">
+                  🩺 Paramedic Visit (Hinglish)
+                </button>
+                <button class="pill" onclick="loadSample('Grandmother has a bedsore that needs dressing')">
+                  🩹 Home Nursing (English)
+                </button>
+                <button class="pill" onclick="loadSample('कल सुबह शुगर टेस्ट घर पर सैंपल कलेक्शन')">
+                  🧪 Lab Test (Hindi)
+                </button>
+                <button class="pill" onclick="loadSample('Want to talk to a doctor about my reports')">
+                  💻 Teleconsultation (English)
+                </button>
+                <button class="pill ambiguous" onclick="loadSample('doctor chahiye')">
+                  ❓ Ambiguous / Follow-up
+                </button>
+              </div>
+            </div>
+
+            <!-- Conversation Stream -->
+            <div class="chat-messages" id="chat-stream">
+              <!-- Welcome Bot Message -->
+              <div class="message assistant">
+                <div class="msg-avatar">🧭</div>
+                <div class="msg-bubble">
+                  <div class="msg-sender">CareCompass Assistant</div>
+                  <div class="msg-text">
+                    Namaste! I am your AI care coordinator. Tell me what symptoms or healthcare assistance you need, and I'll connect you with the right care and nearby verified caregivers.
+                  </div>
+                  <div class="msg-time">Just now</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="chat-input-wrapper">
+              <form id="triage-form" onsubmit="handleTriageSubmit(event)">
+                <div class="input-container">
+                  <textarea 
+                    id="user-input-field" 
+                    placeholder="Type in English, Hindi, or Hinglish (e.g. 'mummy ko bukhar hai', 'need wound dressing')..."
+                    rows="2"
+                    required
+                  ></textarea>
+                  <div class="input-actions">
+                    <button type="button" class="action-icon-btn" onclick="toggleVoiceSim()" title="Voice Input (Speech-to-text)">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                    </button>
+                    <button type="submit" id="submit-triage-btn" class="send-btn">
+                      <span>Triage Now</span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Decision & Matching Details Column -->
+        <div class="details-column">
+          <!-- Live Result Card -->
+          <div class="panel-card decision-card" id="decision-panel">
+            <div class="panel-header">
+              <h3>Triage Assessment & Allocation</h3>
+              <span id="response-time-tag" class="time-tag">Latency: -- ms</span>
+            </div>
+
+            <div id="decision-placeholder" class="empty-state">
+              <div class="empty-icon">🩺</div>
+              <h4>No Active Assessment</h4>
+              <p>Send a message or select a clinical demo above to view real-time triage, red flag detection, and matched caregivers.</p>
+            </div>
+
+            <div id="decision-content" style="display: none;">
+              <!-- Urgency & Care Type Header -->
+              <div class="assessment-hero" id="assessment-hero-card">
+                <div class="hero-primary">
+                  <div class="urgency-chip" id="chip-urgency">SAME DAY</div>
+                  <h3 id="hero-care-type">Paramedic Home Visit</h3>
+                  <div class="language-pill" id="chip-language">Detected: Hinglish</div>
+                </div>
+                <div class="confidence-box">
+                  <span class="conf-label">Model Confidence</span>
+                  <div class="conf-value" id="val-confidence">92%</div>
+                  <div class="conf-bar-bg"><div class="conf-bar-fill" id="conf-bar-fill" style="width: 92%;"></div></div>
+                </div>
+              </div>
+
+              <!-- Red Flags Warning (if any) -->
+              <div class="red-flags-alert" id="red-flags-box" style="display: none;">
+                <div class="rf-title">🚨 Active Red-Flag Emergency Detected:</div>
+                <div class="rf-tags" id="red-flags-list"></div>
+              </div>
+
+              <!-- Clinical Reasoning Chain (XAI) -->
+              <div class="section-block">
+                <div class="block-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                  <span>Explainable Clinical Reasoning (XAI)</span>
+                </div>
+                <div class="reasoning-box" id="text-reasoning">
+                  Clinical evaluation chain of thought...
+                </div>
+              </div>
+
+              <!-- TinyFish Medical Knowledge Grounding -->
+              <div class="section-block" id="tinyfish-block">
+                <div class="block-title tinyfish-header">
+                  <span class="fish-icon">🐟</span>
+                  <span>TinyFish Medical Grounding (WHO/ICMR Protocol)</span>
+                </div>
+                <div class="medical-grounding-box" id="text-medical-context">
+                  First-aid instructions and validation guidelines...
+                </div>
+              </div>
+
+              <!-- Matched Caregivers Section -->
+              <div class="section-block">
+                <div class="block-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                  <span>Matched & Ranked Caregivers</span>
+                </div>
+                <div class="caregivers-list" id="caregivers-cards-container">
+                  <!-- Dynamically rendered -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: OPERATIONS & ANALYTICS DASHBOARD -->
+    <section id="dashboard-view" class="view-panel">
+      <div class="dashboard-grid">
+        <!-- KPI Metrics -->
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <span class="kpi-label">Benchmark Triage Records</span>
+            <div class="kpi-value">340</div>
+            <span class="kpi-sub">Curated clinical dataset</span>
+          </div>
+          <div class="kpi-card highlight-green">
+            <span class="kpi-label">Red Flag Catch Rate</span>
+            <div class="kpi-value">100.0%</div>
+            <span class="kpi-sub">56 / 56 Emergencies Caught</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Active Provider Roster</span>
+            <div class="kpi-value" id="kpi-caregivers-count">52 / 60</div>
+            <span class="kpi-sub">Medics, Doctors, Phlebotomists</span>
+          </div>
+          <div class="kpi-card highlight-blue">
+            <span class="kpi-label">P95 Decision Latency</span>
+            <div class="kpi-value">&lt; 40 ms</div>
+            <span class="kpi-sub">Local dual-layer evaluation</span>
+          </div>
+        </div>
+
+        <!-- Charts & Distribution -->
+        <div class="dashboard-charts-row">
+          <div class="panel-card chart-card">
+            <div class="panel-header">
+              <h3>Care Modality Distribution</h3>
+              <span class="badge">N = 340</span>
+            </div>
+            <div class="distribution-bars">
+              <div class="dist-item">
+                <div class="dist-meta"><span>Home Nursing</span><span>103 (30.3%)</span></div>
+                <div class="bar-track"><div class="bar-fill blue" style="width: 30.3%;"></div></div>
+              </div>
+              <div class="dist-item">
+                <div class="dist-meta"><span>Emergency 112</span><span>56 (16.5%)</span></div>
+                <div class="bar-track"><div class="bar-fill red" style="width: 16.5%;"></div></div>
+              </div>
+              <div class="dist-item">
+                <div class="dist-meta"><span>Home Lab Collection</span><span>51 (15.0%)</span></div>
+                <div class="bar-track"><div class="bar-fill cyan" style="width: 15.0%;"></div></div>
+              </div>
+              <div class="dist-item">
+                <div class="dist-meta"><span>Teleconsultation</span><span>48 (14.1%)</span></div>
+                <div class="bar-track"><div class="bar-fill purple" style="width: 14.1%;"></div></div>
+              </div>
+              <div class="dist-item">
+                <div class="dist-meta"><span>Paramedic Home Visit</span><span>43 (12.6%)</span></div>
+                <div class="bar-track"><div class="bar-fill green" style="width: 12.6%;"></div></div>
+              </div>
+              <div class="dist-item">
+                <div class="dist-meta"><span>Ambiguous / Follow-up</span><span>39 (11.5%)</span></div>
+                <div class="bar-track"><div class="bar-fill orange" style="width: 11.5%;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Caregiver Directory Table -->
+          <div class="panel-card table-card">
+            <div class="panel-header">
+              <h3>Live Caregiver Directory (Delhi NCR)</h3>
+              <div class="table-filters">
+                <select id="role-filter" onchange="filterCaregiverTable()">
+                  <option value="">All Roles</option>
+                  <option value="medic">Medics (Home Visit / Nursing)</option>
+                  <option value="doctor">Doctors (Teleconsult)</option>
+                  <option value="phlebotomist">Phlebotomists (Lab)</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Languages</th>
+                    <th>Rating</th>
+                    <th>Radius</th>
+                    <th>Status</th>
+                    <th>NMC Verification</th>
+                  </tr>
+                </thead>
+                <tbody id="caregivers-table-body">
+                  <!-- Caregivers populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Credential Verification Modal -->
+  <div class="modal-backdrop" id="verify-modal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="fish-icon">🐟</span>
+          <h3>TinyFish Agent Credential Verification</h3>
+        </div>
+        <button class="close-modal-btn" onclick="closeVerifyModal()">×</button>
+      </div>
+      <div class="modal-body" id="verify-modal-body">
+        <div class="verifying-spinner">
+          <div class="spinner"></div>
+          <p>Navigating National Medical Council Registry...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
